@@ -46,7 +46,7 @@ namespace ServerLess
         }
         public EncryptionKey FindKey(Guid id)
         {
-            findKey.Parameters.AddWithValue(null, id.ToString());
+            findKey.Parameters[0].Value = id.ToString();
             using(var reader = findKey.ExecuteReader())
             {
                 while(reader.Read())
@@ -67,13 +67,19 @@ namespace ServerLess
             }
             listPrivateKeys = new SQLiteCommand("SELECT * FROM Keys WHERE isPrivate = 1",connection);
             addKey = new SQLiteCommand("INSERT INTO Keys VALUES (?, ? , ?)",connection);
+            addKey.Parameters.Add(new SQLiteParameter(System.Data.DbType.String));
+            addKey.Parameters.Add(new SQLiteParameter(System.Data.DbType.Binary));
+            addKey.Parameters.Add(new SQLiteParameter(System.Data.DbType.Boolean));
+
             findKey = new SQLiteCommand("SELECT * FROM Keys WHERE Thumbprint = ?",connection);
+            findKey.Parameters.Add(new SQLiteParameter(System.Data.DbType.String));
+
         }
         public void InsertKey(EncryptionKey key)
         {
-            addKey.Parameters.AddWithValue(null, key.Thumbprint);
-            addKey.Parameters.AddWithValue(null, key.RawKey);
-            addKey.Parameters.AddWithValue(null, key.isPrivate);
+            addKey.Parameters[0].Value = key.Thumbprint;
+            addKey.Parameters[1].Value = key.RawKey;
+            addKey.Parameters[2].Value = key.isPrivate;
             addKey.ExecuteNonQuery();
         }
         public static void RunQuery(Action<KeyDatabase> callback)
